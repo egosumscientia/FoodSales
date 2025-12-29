@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>AI-FoodSales Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; background: #f9fafb; }
+    h1 { color: #222; }
+    button, .tab { cursor: pointer; padding: .6rem 1rem; margin-right: .5rem; border: none; border-radius: 6px; }
+    .tab { background: #e0e0e0; transition: all .3s; font-weight: 500; }
+    .tab:hover { background: #ccc; }
+    .tab.active { background: #007bff; color: white; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+    .tab-content { display: none; opacity: 0; transform: translateY(10px); transition: all 0.4s ease; }
+    .tab-content.active { display: block; opacity: 1; transform: translateY(0); }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { border: 1px solid #ccc; padding: .5rem; text-align: left; }
+    th { background: #f0f0f0; }
+    .contador { color: #777; font-size: 0.9rem; margin-top: 0.5rem; text-align: right; }
+    #filters input { margin-right: 1rem; padding: .3rem; }
+  </style>
+</head>
+<body>
+  <h1>AI-FoodSales Dashboard</h1>
+
+  <div id="filters">
+    <label>Orden ID:</label> <input type="text" id="ordenId" placeholder="1">
+    <label>Cliente:</label> <input type="text" id="cliente" placeholder="cliente_001">
+    <label>Producto:</label> <input type="text" id="producto" placeholder="Té verde">
+    <label>Desde:</label> <input type="date" id="desde">
+    <label>Hasta:</label> <input type="date" id="hasta">
+    <button onclick="loadSummaryAll()">Aplicar filtros</button>
+    <button id="exportCSV" style="background:#4CAF50;color:white;">Exportar CSV</button>
+  </div>
+
+  <div style="margin-top:1rem;">
+    <span class="tab active" onclick="showTab('resumen')">📊 Resumen</span>
+    <span class="tab" onclick="showTab('ventas')">🛍 Ventas</span>
+    <span class="tab" onclick="showTab('detalle')">📦 Detalle</span>
+  </div>
+
+  <div id="resumen" class="tab-content active"></div>
+  <div id="ventas" class="tab-content"></div>
+  <div id="detalle" class="tab-content"></div>
+
+  <script>
+    let currentData = {};
+
+    function buildUrl() {
+      const params = new URLSearchParams();
+      const ordenId = document.getElementById("ordenId").value.trim();
+      const cliente = document.getElementById("cliente").value.trim();
+      const producto = document.getElementById("producto").value.trim();
+      const desde = document.getElementById("desde").value;
+      const hasta = document.getElementById("hasta").value;
+      if (ordenId) params.append("orden_id", ordenId);
+      if (cliente) params.append("cliente", cliente);
+      if (producto) params.append("producto", producto);
+      if (desde) params.append("desde", desde);
+      if (hasta) params.append("hasta", hasta);
+      return `http://127.0.0.1:8010/reports/summary_all?${params.toString()}`;
+    }
+
+    async function loadSummaryAll() {
+      const url = buildUrl();
+      const res = await fetch(url);
+      const data = await res.json();
+      currentData = data;
+      renderTable("resumen", "Resumen por cliente", data.order_summary);
+      renderTable("ventas", "Ventas por producto", data.sales_by_product);
+      renderTable("detalle", "Detalle completo de órdenes", data.order_full_detail);
+    }
+
+    function renderTable(containerId, title, data) {
+      const container = document.getElementById(containerId);
+      if (!Array.isArray(data) || data.length === 0) {
+        container.innerHTML = `<h2>${title}</h2><p>No hay datos</p>`;
+        return;
+      }
+      const keys = Object.keys(data[0]);
+      let html = `<h2>${title}</h2><table><tr>${keys.map(k => `<th>${k}</th>`).join("")}</tr>`;
+      html += data.map(row => `<tr>${keys.map(k => `<td>${row[k]}</td>`).join("")}</tr>`).join("");
+      html += "</table>";
+      html += `<div class='contador'>Mostrando ${data.length} filas</div>`;
+      container.innerHTML = html;
+    }
+
+    function showTab(id) {
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+      document.querySelector(`.tab[onclick="showTab('${id}')"]`).classList.add('active');
+      document.getElementById(id).classList.add('active');
+    }
+
+    document.getElementById("exportCSV").addEventListener("click", () => {
+      if (!currentData || Object.keys(currentData).length === 0) {
+        alert("No hay datos para exportar.");
+        return;
+      }
+      const allSections = Object.entries(currentData)
+        .filter(([_, arr]) => Array.isArray(arr) && arr.length > 0)
+        .map(([name, arr]) => {
+          const keys = Object.keys(arr[0]);
+          const rows = arr.map(r => keys.map(k => `"${String(r[k]).replace(/"/g, '""')}"`).join(","));
+          return `${name.toUpperCase()}\n${keys.join(",")}\n${rows.join("\n")}`;
+        })
+        .join("\n\n");
+
+      const blob = new Blob([allSections], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `summary_all_${new Date().toISOString().slice(0,10)}.csv`;
+      link.click();
+    });
+
+    document.addEventListener("DOMContentLoaded", loadSummaryAll);
+  </script>
+</body>
+</html>

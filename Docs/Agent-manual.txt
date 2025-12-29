@@ -1,0 +1,43 @@
+📘 Manual rápido para vendedores humanos
+
+Este manual sirve para que tu equipo de ventas sepa cómo aprovechar al agente GPT y en qué momentos intervenir.
+
+1. ¿Qué hace el agente?
+
+Atiende consultas de clientes (B2B y B2C) en tiempo real.
+
+Reconoce productos del catálogo aunque el cliente use sinónimos, diminutivos o nombres coloquiales (ej. nuggets = Croquetas de pollo).
+
+Valida mínimos por categoría y ajusta automáticamente los pedidos.
+
+Aplica reglas de negocio: descuentos por volumen, recargo 10% si no se cumplen mínimos globales, etc.
+
+Calcula el total estimado en COP con desglose.
+
+Escala al equipo humano cuando el cliente quiere cerrar la compra.
+
+2. ¿Qué NO hace?
+
+No confirma precios finales, stock exacto ni tiempos garantizados.
+
+No negocia condiciones comerciales ni maneja reclamos complejos.
+
+No sustituye la cotización formal: solo prepara el terreno.
+
+3. ¿Cuándo entra el humano?
+
+Cuando el cliente pide precio final oficial.
+
+Si requiere certificados adicionales o documentación.
+
+Si quiere negociar descuentos especiales o plazos de pago.
+
+Si manifiesta frustración o problemas logísticos.
+
+4. Cómo usarlo en el día a día
+
+Deja que el agente atienda los pedidos iniciales y prepare la cotización preliminar.
+
+Usa la información consolidada (nombre, ciudad, contacto, frecuencia, pedido ajustado, total estimado) para generar la cotización oficial.
+
+Si el agente escala un caso, revisa su resumen: ahí ya tendrás lo esencial para cerrar la venta.

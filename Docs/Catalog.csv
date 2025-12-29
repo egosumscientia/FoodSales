@@ -1,0 +1,51 @@
+categoria,sku,nombre,formato,precio_lista_moneda,precio_lista,unidad_minima,descuento_mayorista_volumen,lead_time_dias,regiones_envio,comentarios
+Congelados,CO-001,Papa a la francesa 9mm,5kg,COP,23110,2,10% a partir de 45 unidades,6,Nacional,Apto para veganos
+Congelados,CO-002,Arepas rellenas,12 unidades,COP,25893,9,12% a partir de 25 unidades,2,Nacional,Mantener refrigerado
+Congelados,CO-003,Vegetales mixtos,1kg,COP,29465,12,8% a partir de 27 unidades,2,Nacional,Apto para veganos
+Congelados,CO-004,Filete de pescado,2.5kg,COP,31180,4,10% a partir de 24 unidades,5,Nacional,Mantener refrigerado
+Congelados,CO-005,Croquetas de pollo,1kg,COP,32134,7,9% a partir de 16 unidades,3,Nacional,Empaque resellable
+Lácteos,LÁ-006,Queso mozzarella,1.5L,COP,29786,12,10% a partir de 7 unidades,6,Nacional,Sin azúcar añadida
+Lácteos,LÁ-007,Leche entera,1L,COP,11729,10,7% a partir de 20 unidades,4,Regional,Mantener refrigerado
+Lácteos,LÁ-008,Yogur natural,1kg,COP,6027,10,5% a partir de 10 unidades,7,Nacional,Mantener refrigerado
+Lácteos,LÁ-009,Mantequilla sin sal,250g,COP,16679,3,11% a partir de 39 unidades,7,Nacional,Libre de gluten
+Lácteos,LÁ-010,Kumis,12 unidades,COP,21040,6,11% a partir de 50 unidades,5,Regional,Empaque resellable
+Bebidas,BE-011,Jugo de naranja,6 unidades,COP,30244,11,9% a partir de 36 unidades,4,Nacional,Certificación INVIMA
+Bebidas,BE-012,Agua mineral,5kg,COP,26588,3,9% a partir de 18 unidades,5,Regional,Empaque resellable
+Bebidas,BE-013,Gaseosa cola,1kg,COP,25424,7,7% a partir de 20 unidades,7,Regional,Certificación INVIMA
+Bebidas,BE-014,Té verde,250g,COP,24991,9,11% a partir de 26 unidades,7,Regional,Certificación INVIMA
+Bebidas,BE-015,Cerveza artesanal,5kg,COP,14705,11,11% a partir de 42 unidades,5,Nacional,Mantener refrigerado
+Snacks,SN-016,Mix de frutos secos,700g,COP,9923,7,5% a partir de 20 unidades,5,Nacional,Libre de gluten
+Snacks,SN-017,Chips de plátano,6 unidades,COP,29490,10,5% a partir de 38 unidades,3,Nacional,Empaque resellable
+Snacks,SN-018,Galletas integrales,6 unidades,COP,25143,3,7% a partir de 23 unidades,2,Regional,Certificación INVIMA
+Snacks,SN-019,Barra de granola,1kg,COP,16195,11,12% a partir de 46 unidades,2,Regional,Mantener refrigerado
+Snacks,SN-020,Tostadas de maíz,3kg,COP,27239,5,11% a partir de 48 unidades,7,Regional,Sin azúcar añadida
+Carnes,CA-021,Pechuga de pollo,5kg,COP,10483,5,9% a partir de 41 unidades,2,Nacional,Apto para veganos
+Carnes,CA-022,Carne molida,12 unidades,COP,15021,4,10% a partir de 10 unidades,2,Regional,Ultra suave
+Carnes,CA-023,Chuleta de cerdo,2.5kg,COP,30726,3,12% a partir de 48 unidades,5,Nacional,Apto para veganos
+Carnes,CA-024,Costilla de res,500g,COP,23134,9,10% a partir de 13 unidades,2,Regional,Libre de gluten
+Carnes,CA-025,Salchicha premium,6 unidades,COP,16805,3,12% a partir de 12 unidades,4,Nacional,Apto para veganos
+Panadería,PA-026,Pan integral tajado,250g,COP,24662,4,12% a partir de 26 unidades,4,Nacional,Empaque resellable
+Panadería,PA-027,Croissant,5kg,COP,23500,5,5% a partir de 29 unidades,7,Nacional,Sin azúcar añadida
+Panadería,PA-028,Torta de vainilla,1.5L,COP,4965,3,6% a partir de 15 unidades,2,Nacional,Libre de gluten
+Panadería,PA-029,Baguette,12 unidades,COP,28404,11,12% a partir de 21 unidades,4,Regional,Sin azúcar añadida
+Panadería,PA-030,Pan de bono,2.5kg,COP,34915,5,5% a partir de 50 unidades,7,Regional,Mantener refrigerado
+Aseo,AS-031,Detergente en polvo,250g,COP,15786,11,8% a partir de 9 unidades,6,Nacional,Ultra suave
+Aseo,AS-032,Jabón líquido,6 unidades,COP,18488,6,11% a partir de 21 unidades,2,Regional,Empaque resellable
+Aseo,AS-033,Shampoo,250g,COP,3684,10,8% a partir de 19 unidades,2,Nacional,Mantener refrigerado
+Aseo,AS-034,Suavizante de ropa,1.5L,COP,27235,7,9% a partir de 30 unidades,4,Nacional,Sin azúcar añadida
+Aseo,AS-035,Limpiavidrios,700g,COP,30228,6,12% a partir de 13 unidades,5,Regional,Ultra suave
+Granos,GR-036,Arroz premium,2.5kg,COP,7232,8,11% a partir de 9 unidades,2,Regional,Apto para veganos
+Granos,GR-037,Fríjol rojo,500g,COP,10024,10,6% a partir de 19 unidades,4,Regional,Libre de gluten
+Granos,GR-038,Lenteja,1.5L,COP,8843,6,5% a partir de 44 unidades,3,Nacional,Ultra suave
+Granos,GR-039,Garbanzo,12 unidades,COP,24514,5,10% a partir de 5 unidades,2,Regional,Sin azúcar añadida
+Granos,GR-040,Maíz trillado,250g,COP,32649,6,9% a partir de 46 unidades,7,Regional,Certificación INVIMA
+Aceites,AC-041,Aceite de girasol,250g,COP,9267,4,10% a partir de 16 unidades,5,Nacional,Empaque resellable
+Aceites,AC-042,Aceite de soya,12 unidades,COP,12199,2,8% a partir de 23 unidades,2,Regional,Sin azúcar añadida
+Aceites,AC-043,Aceite de oliva,2L,COP,6251,9,6% a partir de 15 unidades,7,Regional,Certificación INVIMA
+Aceites,AC-044,Aceite de maíz,2L,COP,8196,10,9% a partir de 20 unidades,2,Nacional,Empaque resellable
+Aceites,AC-045,Aceite de coco,700g,COP,33945,5,12% a partir de 5 unidades,5,Nacional,Ultra suave
+Hogar,HO-046,Papel higiénico,700g,COP,18794,10,9% a partir de 16 unidades,7,Nacional,Certificación INVIMA
+Hogar,HO-047,Toallas de cocina,2L,COP,18267,10,12% a partir de 18 unidades,5,Nacional,Certificación INVIMA
+Hogar,HO-048,Servilletas,1L,COP,26162,8,9% a partir de 34 unidades,2,Regional,Sin azúcar añadida
+Hogar,HO-049,Detergente lavavajillas,250g,COP,34080,5,11% a partir de 34 unidades,3,Regional,Sin azúcar añadida
+Hogar,HO-050,Bolsa de basura,2.5kg,COP,15151,9,7% a partir de 21 unidades,7,Regional,Libre de gluten
