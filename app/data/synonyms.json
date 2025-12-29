@@ -15,37 +15,50 @@
   "Arepas rellenas": [
     "arepa rellena",
     "arepas rellenas",
-    "arepitas rellenas"
+    "arepitas rellenas",
+    "arepita rellena"
   ],
   "Vegetales mixtos": [
     "vegetales mixtos",
     "mezcla de verduras",
+    "mezclas de verduras",
     "mix de vegetales",
     "mix de verduras"
   ],
   "Filete de pescado": [
     "filete de pescado",
     "filetes de pescado",
-    "pescado fileteado"
+    "pescado fileteado",
+    "pescados fileteados"
   ],
   "Croquetas de pollo": [
+    "croqueta de pollo",
     "croquetas de pollo",
     "nuggets de pollo",
-    "bolitas de pollo"
+    "bolitas de pollo",
+    "bolita de pollo",
+    "croqueta",
+    "croquetas"
   ],
   "Queso mozzarella": [
     "queso mozzarella",
     "queso mozarela",
     "quesos mozzarella",
     "quesos mozarela",
-    "queso pizza"
+    "queso pizza",
+    "quesos pizza"
   ],
   "Leche entera": [
     "leche entera",
+    "leches enteras",
     "leche líquida",
+    "leches líquidas",
     "leche normal",
+    "leches normales",
     "litro de leche",
-    "bolsa de leche"
+    "litros de leche",
+    "bolsa de leche",
+    "bolsas de leche"
   ],
   "Yogur natural": [
     "yogur natural",
@@ -54,63 +67,89 @@
   ],
   "Mantequilla sin sal": [
     "mantequilla sin sal",
-    "mantequilla natural"
+    "mantequillas sin sal",
+    "mantequilla natural",
+    "mantequillas naturales"
   ],
   "Kumis": [
     "kumis",
-    "bebida láctea fermentada"
+    "bebida láctea fermentada",
+    "bebidas lácteas fermentadas",
+    "bebidas lácteas",
+    "bebida láctea"
   ],
   "Jugo de naranja": [
     "jugo de naranja",
+    "jugos de naranja",
     "zumo de naranja",
+    "zumos de naranja",
     "jugo natural",
-    "jugos de fruta"
+    "jugos naturales",
+    "jugos de fruta",
+    "jugo de fruta"
   ],
   "Agua mineral": [
     "agua mineral",
     "aguas minerales",
     "agua con gas",
+    "aguas con gas",
     "agua sin gas",
-    "botella de agua"
+    "aguas sin gas",
+    "botella de agua",
+    "botellas de agua"
   ],
   "Gaseosa cola": [
     "gaseosa cola",
     "gaseosas cola",
-    "refresco de cola"
+    "refresco de cola",
+    "refrescos de cola"
   ],
   "Té verde": [
     "té verde",
-    "infusión verde"
+    "te verde",
+    "tes verdes",
+    "infusión verde",
+    "infusiones verdes"
   ],
   "Cerveza artesanal": [
     "cerveza artesanal",
     "cervezas artesanales",
     "cerveza especial",
-    "cerveza de barril"
+    "cervezas especiales",
+    "cerveza de barril",
+    "cervezas de barril"
   ],
   "Mix de frutos secos": [
     "mix de frutos secos",
     "mezcla de frutos secos",
-    "snack de frutos secos"
+    "mezclas de frutos secos",
+    "snack de frutos secos",
+    "snacks de frutos secos"
   ],
   "Chips de plátano": [
     "chips de plátano",
     "plátano frito",
-    "platanitos"
+    "plátanos fritos",
+    "platanitos",
+    "platanito"
   ],
   "Galletas integrales": [
     "galletas integrales",
+    "galleta integral",
     "galletas de fibra",
-    "snacks integrales"
+    "galleta de fibra"
   ],
   "Barra de granola": [
     "barra de granola",
-    "snack de granola",
-    "barra energética"
+    "barras de granola",
+    "barra energética",
+    "barras energéticas"
   ],
   "Tostadas de maíz": [
     "tostadas de maíz",
+    "tostada de maíz",
     "nachos",
+    "nacho",
     "totopos"
   ],
   "Pechuga de pollo": [
@@ -127,7 +166,9 @@
   ],
   "Costilla de res": [
     "costilla de res",
-    "costillas de res"
+    "costillas de res",
+    "costilla",
+    "costillas"
   ],
   "Salchicha premium": [
     "salchicha premium",
@@ -147,12 +188,15 @@
   ],
   "Baguette": [
     "baguette",
-    "pan baguette"
+    "baguettes",
+    "pan baguette",
+    "panes baguettes"
   ],
   "Pan de bono": [
     "pan de bono",
     "panes de bono",
-    "pan bono"
+    "pan bono",
+    "panes bono"
   ],
   "Detergente en polvo": [
     "detergente en polvo",

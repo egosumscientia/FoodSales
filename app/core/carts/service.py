@@ -48,10 +48,17 @@ class CartService:
         self.store.save(cart)
         return cart.to_summary()
 
-    def remove(self, session_id: str, sku: str):
+    def remove(self, session_id: str, sku: str, qty: int | None = None):
         session_id = self._session(session_id)
         cart = self.store.get_or_create(session_id)
-        cart.items.pop(sku, None)
+        item = cart.items.get(sku)
+        if not item:
+            return cart.to_summary()
+        if qty is None or qty >= item.qty:
+            cart.items.pop(sku, None)
+        else:
+            item.qty -= qty
+            item.updated_at = time()
         self.store.save(cart)
         return cart.to_summary()
 

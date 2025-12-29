@@ -217,7 +217,17 @@ def detect_additional_intents(text: str) -> dict:
 # --- Extraer múltiples productos y cantidades ---
 def extract_products_and_quantities(message: str) -> list[dict]:
     import json, os, re, unicodedata
-    from rapidfuzz import fuzz  # Asegúrate de tener instalado rapidfuzz
+    try:
+        from rapidfuzz import fuzz  # Asegúrate de tener instalado rapidfuzz
+    except ImportError:
+        from difflib import SequenceMatcher
+
+        class _FuzzFallback:
+            @staticmethod
+            def ratio(a, b):
+                return SequenceMatcher(None, a, b).ratio() * 100
+
+        fuzz = _FuzzFallback()
 
     # --- Definir normalización ---
     def norm(s: str) -> str:
@@ -231,6 +241,25 @@ def extract_products_and_quantities(message: str) -> list[dict]:
 
     txt = norm(message or "")
     txt = strip_accents(txt)
+
+    # --- Convertir numeros escritos a digitos (es/coloquial) ---
+    number_words = {
+        "cero": "0",
+        "un": "1", "uno": "1", "una": "1",
+        "dos": "2",
+        "tres": "3",
+        "cuatro": "4",
+        "cinco": "5",
+        "seis": "6",
+        "siete": "7",
+        "ocho": "8",
+        "nueve": "9",
+        "diez": "10",
+        "once": "11",
+        "doce": "12",
+    }
+    for word, digit in number_words.items():
+        txt = re.sub(rf"\b{word}\b", digit, txt)
 
     # --- Normalización rápida antes del match ---
     txt = txt.lower()
@@ -266,6 +295,14 @@ def extract_products_and_quantities(message: str) -> list[dict]:
                 sset.add(base + "s")
             else:
                 sset.add(base[:-1])
+            # plural simple del primer token (filete -> filetes, croqueta -> croquetas)
+            parts = base.split()
+            if parts:
+                first = parts[0]
+                rest = " ".join(parts[1:]) if len(parts) > 1 else ""
+                if not first.endswith("s"):
+                    plural_first = (first + "s" + (" " + rest if rest else "")).strip()
+                    sset.add(plural_first)
         enriched[canonical] = list(sset)
 
     # --- Reparar productos pegados sin espacios ---

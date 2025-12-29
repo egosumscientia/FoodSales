@@ -2,6 +2,7 @@ import os
 from fastapi import APIRouter
 from pydantic import BaseModel
 from app.core.catalog import find_product_from_message, get_product_row
+import unicodedata
 from app.core.responses import generate_response, build_logistics_response
 from app.core.summary import build_summary
 from app.core.nlp_rules import detect_purchase_intent, detect_logistics_intent
@@ -18,32 +19,73 @@ class ChatMessage(BaseModel):
     channel: str | None = None
 
 # --- BLOQUE NUEVO: deteccion de cortesia ---
-courtesy_keywords = [
-    "hola", "buenos dias", "buenas tardes", "buenas noches",
-    "gracias", "muy amable", "te agradezco", "muchas gracias",
-    "listo", "perfecto", "de acuerdo", "vale", "ok", "entendido"
+def _norm_txt(text: str) -> str:
+    text = text.lower().strip()
+    text = unicodedata.normalize("NFKD", text)
+    return "".join(c for c in text if not unicodedata.combining(c))
+
+# Variantes comunes de saludos/agradecimientos (sin tildes para match robusto)
+greet_terms = [
+    "hola",
+    "buenos dias",
+    "buen dia",
+    "buenas",
+    "buenas tardes",
+    "buenas noches",
+    "buenas dias",
+    "cordial saludo",
+    "saludos",
+    "que tal",
+    "que mas",
+    "que hubo",
+    "como estas",
+    "feliz dia",
+    "feliz tarde",
+    "feliz noche",
+]
+thanks_terms = [
+    "gracias",
+    "mil gracias",
+    "muchas gracias",
+    "muy amable",
+    "te agradezco",
+]
+ack_terms = [
+    "listo",
+    "perfecto",
+    "de acuerdo",
+    "vale",
+    "ok",
+    "entendido",
+    "quedo atento",
 ]
 
 def detect_courtesy_intent(message: str) -> bool:
-    message_lower = message.lower()
-    return any(kw in message_lower for kw in courtesy_keywords)
+    msg = _norm_txt(message)
+    return any(term in msg for term in greet_terms + thanks_terms + ack_terms)
 
 def generate_courtesy_response(message: str) -> str:
-    lower = message.lower()
-    if any(greet in lower for greet in ["hola", "buenos dias", "buenas tardes", "buenas noches"]):
+    msg = _norm_txt(message)
+    if any(term in msg for term in greet_terms):
         return "Hola! En que puedo ayudarte hoy?"
-    elif any(thanks in lower for thanks in ["gracias", "muy amable", "te agradezco", "muchas gracias"]):
+    if any(term in msg for term in thanks_terms):
         return "Con gusto! Si necesitas algo mas, estoy aqui para ayudarte."
-    elif any(close in lower for close in ["listo", "perfecto", "de acuerdo", "vale", "ok", "entendido"]):
+    if any(term in msg for term in ack_terms):
         return "Excelente. Quedo atento por si deseas continuar con tu pedido o consulta."
-    else:
-        return "Estoy aqui si necesitas mas informacion."
+    return "Estoy aqui si necesitas mas informacion."
 # --- FIN BLOQUE NUEVO ---
 
 @router.post("/")
 async def chat_endpoint(data: ChatMessage):
     try:
         user_input = data.message.lower().strip()
+
+        # --- Cortesia rapida ---
+        if detect_courtesy_intent(user_input):
+            return {
+                "agent_response": generate_courtesy_response(user_input),
+                "should_escalate": False,
+            }
 
         # --- COMANDOS DE CARRITO ---
         if "ver carrito" in user_input:
@@ -90,7 +132,8 @@ async def chat_endpoint(data: ChatMessage):
                 sku = prod_row.lower().replace(" ", "-")
 
                 # 4. Quitar del carrito
-                cart_service.remove(data.session_id, sku)
+                qty = max(1, int(item.get("cantidad") or 1))
+                cart_service.remove(data.session_id, sku, qty=qty)
                 removed_items.append(prod_row)
 
             cart = cart_service.show(data.session_id)

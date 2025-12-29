@@ -85,6 +85,8 @@
     <button class="secondary" onclick="sendQuick('ver carrito')">Ver carrito</button>
     <button class="danger" onclick="sendQuick('vacía carrito')">Vaciar carrito</button>
     <button class="confirm" onclick="confirmOrder()">Confirmar pedido</button>
+    <button class="secondary" onclick="viewOrders()">Ver órdenes</button>
+    <button class="danger" onclick="escalateOrder()">Escalar orden</button>
     <button class="warning" onclick="clearChat()">Limpiar chat</button>
   </div>
 
@@ -189,6 +191,76 @@
       const chatBox = document.getElementById("chat");
       chatBox.innerHTML = "";
       addMessage("bot", "Chat limpiado.");
+    }
+
+    async function fetchOrdersByUser() {
+      const res = await fetch(`http://127.0.0.1:8000/orders/status?user_id=${session_id}`, {
+        method: "GET"
+      });
+      return res.json();
+    }
+
+    async function viewOrders() {
+      try {
+        const data = await fetchOrdersByUser();
+        const orders = data.orders || [];
+        if (!orders.length) {
+          addMessage("bot", "No hay órdenes registradas para este usuario.");
+          return;
+        }
+        const lines = orders.map(o => {
+          const total = o.total?.toLocaleString("es-CO", { minimumFractionDigits: 0 });
+          const created = o.created_at ? o.created_at : "";
+          const itemsCount = Array.isArray(o.items) ? o.items.length : 0;
+          return `- ${o.order_serial || o.id} | total: $${total} COP | items: ${itemsCount} | estado: ${o.status || "pendiente"} | fecha: ${created}`;
+        });
+        addMessage("bot", `Órdenes del usuario ${session_id}:\n` + lines.join("\n"));
+      } catch (err) {
+        addMessage("bot", "Error al consultar órdenes.");
+      }
+    }
+
+    async function escalateOrder() {
+      try {
+        const data = await fetchOrdersByUser();
+        const ordersAll = data.orders || [];
+        const orders = ordersAll.filter(o => (o.status || "").toLowerCase() !== "escalated");
+        if (!orders.length) {
+          addMessage("bot", "No hay órdenes disponibles para escalar. Si ya escalaste, un asesor te contactará en menos de 24 horas.");
+          return;
+        }
+        // Ordenar más recientes primero
+        orders.sort((a, b) => (b.id || 0) - (a.id || 0));
+
+        // Construir opciones para elegir
+        const options = orders.map((o, idx) => {
+          const total = o.total?.toLocaleString("es-CO", { minimumFractionDigits: 0 }) ?? "0";
+          return `${idx + 1}) ${o.order_serial || o.id} | $${total} COP | estado: ${o.status || "pendiente"}`;
+        }).join("\n");
+
+        const choice = prompt(`Elige la orden a escalar (1-${orders.length}):\n${options}`, "1");
+        const index = choice ? parseInt(choice, 10) - 1 : 0;
+        const selected = orders[index] || orders[0];
+
+        const payload = {
+          user_id: session_id,
+          order_serial: selected.order_serial,
+          motivo: "detalle"
+        };
+        const res = await fetch("http://127.0.0.1:8000/orders/escalate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (result.should_escalate) {
+          addMessage("bot", result.message || `Escalando la orden ${selected.order_serial || selected.id} a un asesor humano. Un asesor te contactará en menos de 24 horas.`);
+        } else {
+          addMessage("bot", result.message || "No se pudo escalar la orden.");
+        }
+      } catch (err) {
+        addMessage("bot", "Error al escalar la orden.");
+      }
     }
 
   </script>
