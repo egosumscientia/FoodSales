@@ -392,6 +392,19 @@ def should_escalate(message:str)->Dict:
         return {"agent_response":"","should_escalate":False,"summary":{}}
 
     t = normalize(message)
+
+    # Profanidad/insultos directos -> escalar siempre
+    if re.search(r"\b(maldito|maldita|mierda|carajo|hp|hpta|hijueputa|gonorrea|perra|conchudo|conchuda|mediocre[s]?)\b", t):
+        return {
+            "agent_response": "Voy a escalar tu caso a un asesor humano para que te ayude con tu solicitud.",
+            "should_escalate": True,
+            "summary": {
+                "version": "v1.4.1",
+                "motivo": "profanidad",
+                "mensaje": message,
+            },
+        }
+
     s = Scores()
     score_politeness(t, s)
     score_complaint(t, s)

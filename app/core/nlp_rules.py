@@ -351,6 +351,7 @@ def extract_products_and_quantities(message: str) -> list[dict]:
             for token in tokens:
                 for variant in variants:
                     ratio_val = fuzz.ratio(token, variant)
+                    length_diff = abs(len(token) - len(variant))
                     # Acepta alto parecido directo
                     if ratio_val >= 90:
                         qty_total = 1
@@ -358,6 +359,9 @@ def extract_products_and_quantities(message: str) -> list[dict]:
                         break
                     # Para ratios marginales, exige coincidencia de 2+ tokens del sinónimo
                     if 80 <= ratio_val < 90:
+                        # descartar si la longitud difiere demasiado (evita mapear tokens muy cortos)
+                        if length_diff >= max(3, len(variant) * 0.5):
+                            continue
                         variant_words = variant.split()
                         overlap = sum(1 for w in variant_words if w in txt)
                         if overlap >= 2:

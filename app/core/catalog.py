@@ -24,6 +24,12 @@ if os.path.exists(SYNONYMS_FILE):
 else:
     SYNONYMS = {}
 
+# Normalizados en caché para evitar recomputar en cada llamada
+CATALOG_NORMALIZED = []
+CATALOG_NAMES_NORMALIZED = []
+CATALOG_NORM_MAP = {}
+SYNONYMS_NORMALIZED = {}
+
 # ----------------------------------------------------------------------
 # 2️⃣ NORMALIZACIÓN DE TEXTO
 # ----------------------------------------------------------------------
@@ -34,6 +40,33 @@ def normalize_text(text: str) -> str:
     text = re.sub(r"[^a-z0-9\s]", " ", text)
     text = re.sub(r"(\b\w+)s\b", r"\1", text)  # plural → singular simple
     return text
+
+# ----------------------------------------------------------------------
+# CACHE DE NOMBRES NORMALIZADOS
+# ----------------------------------------------------------------------
+def _init_caches() -> None:
+    """Construye caches de nombres normalizados para catálogo y sinónimos."""
+    global CATALOG_NORMALIZED, CATALOG_NAMES_NORMALIZED, CATALOG_NORM_MAP, SYNONYMS_NORMALIZED
+    if CATALOG_NORMALIZED and SYNONYMS_NORMALIZED:
+        return
+
+    if not CATALOG_NORMALIZED:
+        for row in CATALOG:
+            norm_name = normalize_text(row["nombre"])
+            CATALOG_NORMALIZED.append((row["nombre"], norm_name))
+            CATALOG_NAMES_NORMALIZED.append(norm_name)
+            CATALOG_NORM_MAP.setdefault(norm_name, row)
+
+    if not SYNONYMS_NORMALIZED:
+        for key, variants in SYNONYMS.items():
+            normalized_vars = []
+            for v in variants:
+                nv = normalize_text(v)
+                if len(nv) <= 2:
+                    continue
+                normalized_vars.append(nv)
+            if normalized_vars:
+                SYNONYMS_NORMALIZED[key] = normalized_vars
 
 # ----------------------------------------------------------------------
 # 3️⃣ FUNCIÓN DE SIMILITUD Y COINCIDENCIA INTELIGENTE
@@ -48,42 +81,38 @@ def find_product_from_message(message: str) -> str | None:
     """
     print("✅ EJECUTANDO VERSION CORRECTA DE catalog.py")
 
+    _init_caches()
     msg = normalize_text(message)
     words = msg.split()
     best_match = None
     best_score = 0.0
 
     # 🔹 Prioridad 1: sinónimos (si existe synonyms.json)
-    for key, variants in SYNONYMS.items():
-        for variant in variants:
-            norm_variant = normalize_text(variant)
-            # Ignorar palabras demasiado cortas para evitar falsos positivos
-            if len(norm_variant) <= 2:
-                continue
+    for key, norm_variants in SYNONYMS_NORMALIZED.items():
+        for norm_variant in norm_variants:
             if re.search(rf"\b{re.escape(norm_variant)}\b", msg):
                 print(f"[DEBUG] Coincidencia exacta por sinónimo: {key}")
                 return key
 
 
     # 🔹 Prioridad 2: coincidencia directa o parcial
-    for row in CATALOG:
-        name = normalize_text(row["nombre"])
+    for original_name, name in CATALOG_NORMALIZED:
         for w in words:
             if w in name or name in w:
                 score = similarity(msg, name)
                 if score > best_score:
-                    best_match, best_score = row["nombre"], score
+                    best_match, best_score = original_name, score
 
     # 🔹 Prioridad 3: coincidencia difusa más general
-    all_names = [normalize_text(r["nombre"]) for r in CATALOG]
     for w in words:
-        matches = difflib.get_close_matches(w, all_names, n=1, cutoff=0.65)
+        matches = difflib.get_close_matches(w, CATALOG_NAMES_NORMALIZED, n=1, cutoff=0.65)
         if matches:
-            for r in CATALOG:
-                if normalize_text(r["nombre"]) == matches[0]:
-                    score = similarity(msg, matches[0])
-                    if score > best_score:
-                        best_match, best_score = r["nombre"], score
+            match_norm = matches[0]
+            row = CATALOG_NORM_MAP.get(match_norm)
+            if row:
+                score = similarity(msg, match_norm)
+                if score > best_score:
+                    best_match, best_score = row["nombre"], score
 
   # 🔹 Filtro final para evitar falsos positivos (como 'detergente' → 'té verde')
     # ------------------------------------------------------------------
@@ -110,18 +139,17 @@ def get_product_row(product_name: str) -> dict | None:
     """Devuelve la fila completa del producto por nombre o coincidencia aproximada."""
     if not product_name:
         return None
+    _init_caches()
     normalized = normalize_text(product_name)
-    for row in CATALOG:
-        if normalize_text(row["nombre"]) == normalized:
-            return row
+    if normalized in CATALOG_NORM_MAP:
+        return CATALOG_NORM_MAP[normalized]
 
     # Buscar coincidencia cercana si no hay exacta
-    names = [normalize_text(row["nombre"]) for row in CATALOG]
-    match = difflib.get_close_matches(normalized, names, n=1, cutoff=0.4)
+    match = difflib.get_close_matches(normalized, CATALOG_NAMES_NORMALIZED, n=1, cutoff=0.4)
     if match:
-        for row in CATALOG:
-            if normalize_text(row["nombre"]) == match[0]:
-                return row
+        row = CATALOG_NORM_MAP.get(match[0])
+        if row:
+            return row
     return None
 
 # ----------------------------------------------------------------------
