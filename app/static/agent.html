@@ -72,7 +72,7 @@
   </style>
 </head>
 <body>
-  <h1>🤖 Agente AI-FoodSales</h1>
+  <h1>Agente AI-FoodSales</h1>
 
   <div id="chat"></div>
 
@@ -82,15 +82,15 @@
   </div>
 
   <div id="quick-actions">
-    <button class="secondary" onclick="sendQuick('ver carrito')">🛒 Ver carrito</button>
-    <button class="danger" onclick="sendQuick('vacía carrito')">🗑️ Vaciar carrito</button>
-    <button class="confirm" onclick="confirmOrder()">🧾 Confirmar pedido</button>
-    <button class="warning" onclick="clearChat()">🧹 Limpiar chat</button>
+    <button class="secondary" onclick="sendQuick('ver carrito')">Ver carrito</button>
+    <button class="danger" onclick="sendQuick('vacía carrito')">Vaciar carrito</button>
+    <button class="confirm" onclick="confirmOrder()">Confirmar pedido</button>
+    <button class="warning" onclick="clearChat()">Limpiar chat</button>
   </div>
 
   <script>
     const chat = document.getElementById("chat");
-    const session_id = "cliente_011"; // se puede hacer dinámico más adelante
+    const session_id = "cliente_011"; // se puede hacer dinamico mas adelante
 
     async function send() {
       const msg = document.getElementById("msg").value.trim();
@@ -107,7 +107,7 @@
 
     async function sendToAgent(msg) {
       try {
-        const res = await fetch("http://127.0.0.1:8010/chat/", {
+        const res = await fetch("http://127.0.0.1:8000/chat/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: msg, session_id })
@@ -115,30 +115,30 @@
         const data = await res.json();
         addMessage("bot", data.agent_response || "Sin respuesta.");
       } catch (err) {
-        addMessage("bot", "⚠️ Error de conexión con el servidor.");
+        addMessage("bot", "Error de conexion con el servidor.");
       }
     }
 
     async function confirmOrder() {
       try {
-        addMessage("user", "🧾 Confirmar pedido");
+        addMessage("user", "Confirmar pedido");
 
         // Obtener el carrito actual
-        const resCart = await fetch("http://127.0.0.1:8010/chat/", {
+        const resCart = await fetch("http://127.0.0.1:8000/chat/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: "ver carrito", session_id })
         });
         const cartData = await resCart.json();
 
-        // Simulación de payload hacia /orders/
+        // Simulacion de payload hacia /orders/
         const payload = {
           user_id: session_id,
           items: extractItemsFromText(cartData.agent_response),
           status: "pending"
         };
 
-        const resOrder = await fetch("http://127.0.0.1:8010/orders/", {
+        const resOrder = await fetch("http://127.0.0.1:8000/orders/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
@@ -147,18 +147,18 @@
         const orderData = await resOrder.json();
 
         addMessage("bot",
-          `Pedido confirmado ✅<br>Número de orden: <b>${orderData.order_serial || orderData.order_id}</b><br>Total: ${payload.items.length} productos.`
+          `Pedido confirmado.<br>Numero de orden: <b>${orderData.order_serial || orderData.order_id}</b><br>Total: ${payload.items.length} productos.`
         );
 
-        // Limpia carrito en backend después de confirmar
-        await fetch("http://127.0.0.1:8010/chat/", {
+        // Limpia carrito en backend despues de confirmar
+        await fetch("http://127.0.0.1:8000/chat/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: "vacía carrito", session_id })
         });
 
       } catch (err) {
-        addMessage("bot", "⚠️ Error al confirmar pedido.");
+        addMessage("bot", "Error al confirmar pedido.");
       }
     }
 
@@ -180,7 +180,7 @@
     function addMessage(role, text) {
       const p = document.createElement("p");
       p.classList.add("msg", role);
-      p.innerHTML = `<b>${role === "user" ? "Tú" : "Agente"}:</b> ${text}`;
+      p.innerHTML = `<b>${role === "user" ? "Tu" : "Agente"}:</b> ${text}`;
       chat.appendChild(p);
       chat.scrollTop = chat.scrollHeight;
     }
@@ -188,7 +188,7 @@
     function clearChat() {
       const chatBox = document.getElementById("chat");
       chatBox.innerHTML = "";
-      addMessage("bot", "🧹 Chat limpiado.");
+      addMessage("bot", "Chat limpiado.");
     }
 
   </script>

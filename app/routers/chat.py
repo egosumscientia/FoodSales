@@ -17,9 +17,9 @@ class ChatMessage(BaseModel):
     session_id: str | None = None
     channel: str | None = None
 
-# --- BLOQUE NUEVO: detección de cortesía ---
+# --- BLOQUE NUEVO: deteccion de cortesia ---
 courtesy_keywords = [
-    "hola", "buenos días", "buenas tardes", "buenas noches",
+    "hola", "buenos dias", "buenas tardes", "buenas noches",
     "gracias", "muy amable", "te agradezco", "muchas gracias",
     "listo", "perfecto", "de acuerdo", "vale", "ok", "entendido"
 ]
@@ -30,14 +30,14 @@ def detect_courtesy_intent(message: str) -> bool:
 
 def generate_courtesy_response(message: str) -> str:
     lower = message.lower()
-    if any(greet in lower for greet in ["hola", "buenos días", "buenas tardes", "buenas noches"]):
-        return "¡Hola! 😊 ¿En qué puedo ayudarte hoy?"
+    if any(greet in lower for greet in ["hola", "buenos dias", "buenas tardes", "buenas noches"]):
+        return "Hola! En que puedo ayudarte hoy?"
     elif any(thanks in lower for thanks in ["gracias", "muy amable", "te agradezco", "muchas gracias"]):
-        return "¡Con gusto! Si necesitas algo más, estoy aquí para ayudarte. 🙌"
+        return "Con gusto! Si necesitas algo mas, estoy aqui para ayudarte."
     elif any(close in lower for close in ["listo", "perfecto", "de acuerdo", "vale", "ok", "entendido"]):
-        return "Excelente 👍. Quedo atento por si deseas continuar con tu pedido o consulta."
+        return "Excelente. Quedo atento por si deseas continuar con tu pedido o consulta."
     else:
-        return "Estoy aquí si necesitas más información. 😊"
+        return "Estoy aqui si necesitas mas informacion."
 # --- FIN BLOQUE NUEVO ---
 
 @router.post("/")
@@ -49,12 +49,12 @@ async def chat_endpoint(data: ChatMessage):
         if "ver carrito" in user_input:
             cart = cart_service.show(data.session_id)
             if not cart["items"]:
-                return {"agent_response": "Tu carrito está vacío.", "should_escalate": False}
+                return {"agent_response": "Tu carrito esta vacio.", "should_escalate": False}
             items_txt = [f"- {i['name']} x{i['qty']} = ${i['line_total']:,.0f} COP" for i in cart["items"]]
-            total_txt = f"🟩 Total carrito: ${cart['total']:,.0f} COP"
+            total_txt = f"Total carrito: ${cart['total']:,.0f} COP"
             return {"agent_response": "\n".join(items_txt + [total_txt]), "should_escalate": False}
 
-        if "vacía carrito" in user_input or "limpia carrito" in user_input:
+        if "vacia carrito" in user_input or "vacía carrito" in user_input or "limpia carrito" in user_input:
             cart_service.clear(data.session_id)
             return {"agent_response": "Carrito vaciado.", "should_escalate": False}
 
@@ -368,7 +368,7 @@ async def chat_endpoint(data: ChatMessage):
         print("[ERROR] chat_endpoint:", e)
         traceback.print_exc()
         return {
-            "agent_response": "Ocurrió un error interno en el servidor.",
+            "agent_response": "Ocurrio un error interno en el servidor.",
             "should_escalate": True,
             "summary": {"error": str(e)},
         }

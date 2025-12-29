@@ -9,7 +9,7 @@ from sqlalchemy.orm import sessionmaker, DeclarativeBase
 # === CONFIGURACIÓN: conexión a PostgreSQL ===
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql+psycopg://postgres:123@localhost:5432/ai_foodsales"
+    "postgresql+psycopg://fooduser:123@localhost:5432/foodsalesdb"
 )
 
 # === ENGINE ===
