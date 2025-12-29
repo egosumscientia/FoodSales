@@ -324,11 +324,13 @@ async def chat_endpoint(data: ChatMessage):
                 response_lines.append(resultado)
 
                 # --- NUEVO: actualizar carrito ---
+                discount_data = pricing.compute_discount_data(prod_row, qty)
                 cart_item = CartItem(
                     sku=prod_row["nombre"].lower().replace(" ", "-"),
                     name=prod_row["nombre"],
                     qty=qty,
-                    unit_price=float(str(prod_row["precio_lista"]).replace(",", ".")),
+                    unit_price=discount_data["precio"],
+                    discount=discount_data["per_unit_discount"],
                 )
                 cart_service.add(data.session_id, cart_item, merge=True)
                 # --- FIN NUEVO ---              
@@ -342,22 +344,24 @@ async def chat_endpoint(data: ChatMessage):
             # --- MOSTRAR CARRITO ACTUALIZADO (sin repetir totales parciales) ---
             cart = cart_service.show(data.session_id)
             if cart["items"]:
-                carrito_text = "\n".join(
-                    [f"- {i['name']} x{i['qty']} = ${i['line_total']:,.0f} COP" for i in cart["items"]]
-                    + [f"🟩 Total carrito: ${cart['total']:,.0f} COP"]
-                )
+                lineas = []
+                for i in cart["items"]:
+                    if i.get("discount", 0) > 0 and i.get("unit_price"):
+                        perc = (i["discount"] / i["unit_price"]) * 100 if i["unit_price"] else 0
+                        lineas.append(f"- {i['name']} x{i['qty']} = ${i['line_total']:,.0f} COP (desc {perc:.0f}%)")
+                    else:
+                        lineas.append(f"- {i['name']} x{i['qty']} = ${i['line_total']:,.0f} COP")
+                lineas.append(f"🟩 Total: ${cart['total']:,.0f} COP")
+                carrito_text = "\n".join(lineas)
                 # Agrega el bloque una sola vez al final
             else:
                 carrito_text = "🛒 Carrito vacío."
             # --- FIN MOSTRAR CARRITO ACTUALIZADO ---
 
-            if total_general > 0 and valid_items > 1:
-                response_lines.append(f"🟩 Total general: ${total_general:,.0f} COP")
-
             action_block = [last_action_txt] if last_action_txt else []
 
             return {
-                "agent_response": "\n".join(response_lines + action_block + ["", "🛒 Carrito actualizado:", carrito_text]),
+                "agent_response": "\n".join(action_block + ["🛒 Carrito actualizado:", carrito_text]) if action_block else "\n".join(["🛒 Carrito actualizado:", carrito_text]),
                 "should_escalate": False,
                 "summary": {
                     "tipo": "pedido_productos",

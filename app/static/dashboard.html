@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>AI-FoodSales Dashboard</title>
+  <title>FoodSales Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 2rem; background: #f9fafb; }
@@ -21,7 +21,7 @@
   </style>
 </head>
 <body>
-  <h1>AI-FoodSales Dashboard</h1>
+  <h1>FoodSales Dashboard</h1>
 
   <div id="filters">
     <label>Orden ID:</label> <input type="text" id="ordenId" placeholder="1">
@@ -108,6 +108,9 @@
       );
 
       const colors = labels.map((_, i) => `hsl(${(i * 45) % 360},70%,60%)`);
+      const maxVal = Math.max(...values, 0);
+      const minVal = Math.min(...values.filter(v => v > 0), maxVal || 1);
+      const useLog = maxVal > 0 && minVal > 0 && maxVal / Math.max(minVal, 1) > 25;
 
       container.innerHTML = `
         <h2>${title}</h2>
@@ -146,13 +149,16 @@
                   return ` $${val.toLocaleString("es-CO")}`;
                 }
               }
-            }
+            },
+            title: useLog ? { display: true, text: "Escala logarítmica para comparar productos muy dispares" } : {}
           },
           scales: {
             y: {
-              beginAtZero: true,
+              type: useLog ? "logarithmic" : "linear",
+              beginAtZero: !useLog,
+              suggestedMin: useLog ? Math.max(1, Math.floor(minVal * 0.8)) : 0,
               ticks: {
-                callback: value => `$${value.toLocaleString("es-CO")}`
+                callback: value => `$${Number(value).toLocaleString("es-CO")}`
               }
             }
           }

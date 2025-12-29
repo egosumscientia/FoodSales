@@ -163,6 +163,12 @@
       background: var(--warning);
       box-shadow: none;
     }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
 
     #quick-actions {
       margin-top: 0.85rem;
@@ -201,32 +207,63 @@
   </div>
 
   <div id="quick-actions">
-    <button class="secondary pill" onclick="sendQuick('ver carrito')"><span class="icon">🛒</span>Ver carrito</button>
-    <button class="danger pill" onclick="sendQuick('vacía carrito')"><span class="icon">🧹</span>Vaciar carrito</button>
-    <button class="confirm pill" onclick="confirmOrder()"><span class="icon">✅</span>Confirmar pedido</button>
-    <button class="secondary pill" onclick="viewOrders()"><span class="icon">📑</span>Ver órdenes</button>
-    <button class="danger pill" onclick="escalateOrder()"><span class="icon">⚠️</span>Escalar orden</button>
+    <button id="btnVerCarrito" class="secondary pill" onclick="sendQuick('ver carrito')"><span class="icon">🛒</span>Ver carrito</button>
+    <button id="btnVaciar" class="danger pill" onclick="sendQuick('vacía carrito')"><span class="icon">🧹</span>Vaciar carrito</button>
+    <button id="btnConfirmar" class="confirm pill" onclick="confirmOrder()"><span class="icon">✅</span>Confirmar pedido</button>
+    <button id="btnVerOrdenes" class="secondary pill" onclick="viewOrders()"><span class="icon">📑</span>Ver órdenes</button>
+    <button id="btnEscalar" class="danger pill" onclick="escalateOrder()"><span class="icon">⚠️</span>Escalar orden</button>
     <button class="warning pill" onclick="clearChat()"><span class="icon">🗑️</span>Limpiar chat</button>
   </div>
 
   <script>
     const chat = document.getElementById("chat");
     const session_id = "cliente_011"; // se puede hacer dinamico mas adelante
+    let cartHasItems = false;
+    let ordersAvailable = false;
 
     async function send() {
       const msg = document.getElementById("msg").value.trim();
       if (!msg) return;
       addMessage("user", msg);
       document.getElementById("msg").value = "";
-      await sendToAgent(msg);
+      const resp = await sendToAgent(msg);
+      handleStateFromAgent(resp);
     }
 
     async function sendQuick(text) {
       addMessage("user", text);
-      await sendToAgent(text);
+      const resp = await sendToAgent(text);
+      handleStateFromAgent(resp);
     }
 
     let lastCart = { items: [] };
+    function handleStateFromAgent(responseText) {
+      if (!responseText) return;
+      const txt = responseText.toLowerCase();
+      // Carrito vacío vs. carrito con total
+      if (txt.includes("carrito vacío") || txt.includes("carrito vacio")) {
+        cartHasItems = false;
+      } else if (txt.includes("carrito actualizado") || (txt.includes("total") && txt.includes("carrito"))) {
+        cartHasItems = true;
+      }
+      // Órdenes disponibles
+      if (txt.includes("no hay órdenes") || txt.includes("no hay ordenes")) {
+        ordersAvailable = false;
+      } else if (txt.includes("órdenes del usuario") || txt.includes("ordenes del usuario")) {
+        ordersAvailable = true;
+      }
+      updateButtons();
+    }
+
+    function updateButtons() {
+      document.getElementById("btnConfirmar").disabled = !cartHasItems;
+      document.getElementById("btnVaciar").disabled = !cartHasItems;
+      document.getElementById("btnVerCarrito").disabled = !cartHasItems;
+      document.getElementById("btnEscalar").disabled = !ordersAvailable;
+    }
+
+    // Estado inicial
+    updateButtons();
 
     async function sendToAgent(msg) {
       try {
@@ -243,8 +280,11 @@
           lastCart = data.summary.cart;
           console.log("Carrito actualizado:", lastCart);
         }
+        handleStateFromAgent(data.agent_response);
+        return data.agent_response;
       } catch (err) {
         addMessage("bot", "Error de conexion con el servidor.");
+        return null;
       }
     }
 
@@ -281,6 +321,8 @@
           );
           // Limpiar el estado local
           lastCart = { items: [] };
+          cartHasItems = false;
+          updateButtons();
         } else {
           addMessage("bot", "Error al procesar la orden: " + (orderData.detail || "Error desconocido"));
         }
@@ -336,8 +378,12 @@
         const orders = data.orders || [];
         if (!orders.length) {
           addMessage("bot", "No hay órdenes registradas para este usuario.");
+          ordersAvailable = false;
+          updateButtons();
           return;
         }
+        ordersAvailable = true;
+        updateButtons();
         const lines = orders.map(o => {
           const total = o.total?.toLocaleString("es-CO", { minimumFractionDigits: 0 });
           const created = o.created_at ? o.created_at : "";
@@ -357,8 +403,12 @@
         const orders = ordersAll.filter(o => (o.status || "").toLowerCase() !== "escalated");
         if (!orders.length) {
           addMessage("bot", "No hay órdenes disponibles para escalar. Si ya escalaste, un asesor te contactará en menos de 24 horas.");
+          ordersAvailable = false;
+          updateButtons();
           return;
         }
+        ordersAvailable = true;
+        updateButtons();
         // Ordenar más recientes primero
         orders.sort((a, b) => (b.id || 0) - (a.id || 0));
 
