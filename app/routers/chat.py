@@ -114,7 +114,14 @@ async def chat_endpoint(data: ChatMessage):
                 return {"agent_response": "Tu carrito esta vacio.", "should_escalate": False}
             items_txt = [f"- {i['name']} x{i['qty']} = ${i['line_total']:,.0f} COP" for i in cart["items"]]
             total_txt = f"Total carrito: ${cart['total']:,.0f} COP"
-            return {"agent_response": "\n".join(items_txt + [total_txt]), "should_escalate": False}
+            return {
+                "agent_response": "\n".join(items_txt + [total_txt]),
+                "should_escalate": False,
+                "summary": {
+                    "tipo": "consulta_carrito",
+                    "cart": cart
+                }
+            }
 
         if "vacia carrito" in user_input or "vacía carrito" in user_input or "limpia carrito" in user_input:
             cart_service.clear(data.session_id)
@@ -171,6 +178,11 @@ async def chat_endpoint(data: ChatMessage):
             return {
                 "agent_response": f"{action_block}Producto(s) eliminado(s): {', '.join(removed_items)}\n\n🛒 Carrito actualizado:\n{carrito_txt}",
                 "should_escalate": False,
+                "summary": {
+                    "tipo": "eliminacion_producto",
+                    "eliminados": removed_items,
+                    "cart": cart
+                }
             }
 
 
@@ -348,9 +360,10 @@ async def chat_endpoint(data: ChatMessage):
                 "agent_response": "\n".join(response_lines + action_block + ["", "🛒 Carrito actualizado:", carrito_text]),
                 "should_escalate": False,
                 "summary": {
+                    "tipo": "pedido_productos",
                     "pedido_o_consulta": user_input,
                     "accion_del_agente": f"Cálculo múltiple para {len(items)} productos",
-                    "carrito": cart_service.show(data.session_id),
+                    "cart": cart,
                 },
             }
 
@@ -358,8 +371,6 @@ async def chat_endpoint(data: ChatMessage):
         # 👇 Si no hay productos, continúa flujo general
         intent_level = detect_purchase_intent(user_input)
         response = generate_response(product_row, user_input)
-
-        # --- Prioridad de respuestas informativas directas (INVIMA, IVA, etc.) ---
         if "invima" in user_input or "certificado invima" in user_input:
             return response
         if "iva" in user_input or "incluye iva" in user_input or "precio con iva" in user_input:

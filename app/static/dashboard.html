@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>AI-FoodSales Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 2rem; background: #f9fafb; }
     h1 { color: #222; }
@@ -44,6 +45,7 @@
 
   <script>
     let currentData = {};
+    let salesChart = null;
 
     function buildUrl() {
       const params = new URLSearchParams();
@@ -57,7 +59,7 @@
       if (producto) params.append("producto", producto);
       if (desde) params.append("desde", desde);
       if (hasta) params.append("hasta", hasta);
-      return `http://127.0.0.1:8010/reports/summary_all?${params.toString()}`;
+      return `http://127.0.0.1:8000/reports/summary_all?${params.toString()}`;
     }
 
     async function loadSummaryAll() {
@@ -66,7 +68,7 @@
       const data = await res.json();
       currentData = data;
       renderTable("resumen", "Resumen por cliente", data.order_summary);
-      renderTable("ventas", "Ventas por producto", data.sales_by_product);
+      renderVentas("ventas", "Ventas por producto", data.sales_by_product);
       renderTable("detalle", "Detalle completo de órdenes", data.order_full_detail);
     }
 
@@ -82,6 +84,80 @@
       html += "</table>";
       html += `<div class='contador'>Mostrando ${data.length} filas</div>`;
       container.innerHTML = html;
+    }
+
+    function renderVentas(containerId, title, data) {
+      const container = document.getElementById(containerId);
+      if (!Array.isArray(data) || data.length === 0) {
+        container.innerHTML = `<h2>${title}</h2><p>No hay datos</p>`;
+        if (salesChart) { salesChart.destroy(); salesChart = null; }
+        return;
+      }
+
+      const labels = data.map((r, idx) => r.producto || r.product || r.product_name || r.nombre || `Producto ${idx + 1}`);
+      const values = data.map((r) =>
+        Number(
+          r.total_vendido ??
+          r.total_comprado ??
+          r.total_ventas ??
+          r.total ??
+          r.monto ??
+          r.total_sales ??
+          0
+        )
+      );
+
+      const colors = labels.map((_, i) => `hsl(${(i * 45) % 360},70%,60%)`);
+
+      container.innerHTML = `
+        <h2>${title}</h2>
+        <div style="display:grid;grid-template-columns: minmax(320px, 1fr);gap:0.75rem;max-width: 780px;">
+          <canvas id="salesChart" height="240"></canvas>
+          <div style="overflow-x:auto;">
+            <table style="min-width: 320px;">
+              <tr>${Object.keys(data[0]).map(k => `<th>${k}</th>`).join("")}</tr>
+              ${data.map(row => `<tr>${Object.keys(data[0]).map(k => `<td>${row[k]}</td>`).join("")}</tr>`).join("")}
+            </table>
+            <div class='contador'>Mostrando ${data.length} filas</div>
+          </div>
+        </div>`;
+
+      const ctx = document.getElementById("salesChart");
+      if (salesChart) salesChart.destroy();
+      salesChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [{
+            label: "Total vendido",
+            data: values,
+            backgroundColor: colors,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: ctx => {
+                  const val = ctx.parsed.y ?? 0;
+                  return ` $${val.toLocaleString("es-CO")}`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: value => `$${value.toLocaleString("es-CO")}`
+              }
+            }
+          }
+        }
+      });
     }
 
     function showTab(id) {

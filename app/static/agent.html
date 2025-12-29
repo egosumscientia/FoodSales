@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <title>FoodSales</title>
@@ -22,7 +23,11 @@
       --bubble-bot: #f5f7fb;
       --radius: 14px;
     }
-    * { box-sizing: border-box; }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: "Manrope", "Segoe UI", sans-serif;
       background: var(--bg);
@@ -32,12 +37,14 @@
       padding: 2rem 1.5rem 3rem;
       color: var(--text);
     }
+
     h1 {
       color: var(--text);
       margin-bottom: 1.25rem;
       letter-spacing: -0.5px;
       font-weight: 700;
     }
+
     #chat {
       background: var(--panel);
       border: 1px solid var(--border);
@@ -48,6 +55,7 @@
       padding: 1.2rem;
       overflow-y: auto;
     }
+
     .msg {
       margin: 0.65rem 0;
       line-height: 1.5;
@@ -55,6 +63,7 @@
       gap: 0.55rem;
       align-items: flex-start;
     }
+
     .bubble {
       padding: 0.65rem 0.9rem;
       border-radius: var(--radius);
@@ -63,18 +72,22 @@
       border: 1px solid var(--border);
       background: var(--bubble-bot);
     }
+
     .user {
       justify-content: flex-end;
     }
+
     .user .bubble {
       background: var(--bubble-user);
       border-color: #d6e5ff;
     }
+
     .role {
       font-weight: 700;
       display: block;
       margin-bottom: 0.15rem;
     }
+
     #input-area {
       display: flex;
       width: min(720px, 100%);
@@ -82,6 +95,7 @@
       gap: 0.75rem;
       align-items: center;
     }
+
     input {
       flex: 1;
       padding: 0.9rem 1rem;
@@ -92,10 +106,12 @@
       background: white;
       transition: border 0.2s, box-shadow 0.2s;
     }
+
     input:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
     }
+
     button {
       background: var(--accent);
       color: white;
@@ -105,17 +121,49 @@
       cursor: pointer;
       transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s;
       font-weight: 600;
-      box-shadow: 0 8px 18px rgba(37,99,235,0.25);
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25);
     }
-    button:hover { transform: translateY(-1px); }
-    button:active { transform: translateY(0); }
-    .secondary { background: #6b7280; box-shadow: none; }
-    .secondary:hover { background: #5a6070; }
-    .danger { background: var(--danger); box-shadow: none; }
-    .danger:hover { background: #cc4444; }
-    .confirm { background: var(--accent-2); box-shadow: none; }
-    .confirm:hover { background: #00a682; }
-    .warning { background: var(--warning); box-shadow: none; }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .secondary {
+      background: #6b7280;
+      box-shadow: none;
+    }
+
+    .secondary:hover {
+      background: #5a6070;
+    }
+
+    .danger {
+      background: var(--danger);
+      box-shadow: none;
+    }
+
+    .danger:hover {
+      background: #cc4444;
+    }
+
+    .confirm {
+      background: var(--accent-2);
+      box-shadow: none;
+    }
+
+    .confirm:hover {
+      background: #00a682;
+    }
+
+    .warning {
+      background: var(--warning);
+      box-shadow: none;
+    }
+
     #quick-actions {
       margin-top: 0.85rem;
       width: min(720px, 100%);
@@ -124,6 +172,7 @@
       gap: 0.55rem;
       align-items: stretch;
     }
+
     .pill {
       display: inline-flex;
       align-items: center;
@@ -134,11 +183,13 @@
       font-size: 0.9rem;
       width: 100%;
     }
+
     .icon {
       font-size: 1rem;
     }
   </style>
 </head>
+
 <body>
   <h1>FoodSales</h1>
 
@@ -175,6 +226,8 @@
       await sendToAgent(text);
     }
 
+    let lastCart = { items: [] };
+
     async function sendToAgent(msg) {
       try {
         const res = await fetch("http://127.0.0.1:8000/chat/", {
@@ -184,6 +237,12 @@
         });
         const data = await res.json();
         addMessage("bot", data.agent_response || "Sin respuesta.");
+
+        // --- NUEVO: Capturar el carrito del summary estructurado ---
+        if (data.summary && data.summary.cart) {
+          lastCart = data.summary.cart;
+          console.log("Carrito actualizado:", lastCart);
+        }
       } catch (err) {
         addMessage("bot", "Error de conexion con el servidor.");
       }
@@ -193,18 +252,19 @@
       try {
         addMessage("user", "Confirmar pedido");
 
-        // Obtener el carrito actual
-        const resCart = await fetch("http://127.0.0.1:8000/chat/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: "ver carrito", session_id })
-        });
-        const cartData = await resCart.json();
+        if (!lastCart || !lastCart.items || lastCart.items.length === 0) {
+          addMessage("bot", "Tu carrito está vacío. Agrega productos antes de confirmar.");
+          return;
+        }
 
-        // Simulacion de payload hacia /orders/
+        // Payload hacia /orders/ usando los datos estructurados
         const payload = {
           user_id: session_id,
-          items: extractItemsFromText(cartData.agent_response),
+          items: lastCart.items.map(i => ({
+            nombre: i.name,
+            cantidad: i.qty,
+            precio_unitario: i.unit_price
+          })),
           status: "pending"
         };
 
@@ -215,19 +275,18 @@
         });
 
         const orderData = await resOrder.json();
-
-        addMessage("bot",
-          `Pedido confirmado.<br>Numero de orden: <b>${orderData.order_serial || orderData.order_id}</b><br>Total: ${payload.items.length} productos.`
-        );
-
-        // Limpia carrito en backend despues de confirmar
-        await fetch("http://127.0.0.1:8000/chat/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: "vacía carrito", session_id })
-        });
+        if (resOrder.ok) {
+          addMessage("bot",
+            `✅ Pedido confirmado correctamente.<br>Número de orden: <b>${orderData.order_serial || orderData.order_id}</b><br>Total: ${payload.items.length} productos.`
+          );
+          // Limpiar el estado local
+          lastCart = { items: [] };
+        } else {
+          addMessage("bot", "Error al procesar la orden: " + (orderData.detail || "Error desconocido"));
+        }
 
       } catch (err) {
+        console.error(err);
         addMessage("bot", "Error al confirmar pedido.");
       }
     }
@@ -336,4 +395,5 @@
 
   </script>
 </body>
+
 </html>

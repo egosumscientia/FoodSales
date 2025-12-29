@@ -113,6 +113,8 @@ SARCASM_POS_MARKERS = {
     "espectacular","grandioso","buenisimo","buenísimo","formidable",
     "impresionante","fenomenal","divino","maravilla","fantasia","fantasía",
     "de lujo","de maravilla","de diez","de pelicula","de película",
+    # Elogios irónicos directos
+    "genios","genio","crack","cracks","maestro","maestros","capo","capos",
 
     # Ironías frecuentes en contexto de reclamo
     "claro","por supuesto","seguro","obvio","como no",
@@ -362,6 +364,12 @@ def score_sarcasm(text: str, s: Scores):
         s.sarcasm += 1.3
         s.complaint += 0.6
         s.cues["sarcasm"].append("sarcasmo_implicito_positivo")
+
+    # elogio directo usado irónicamente ("son unos genios", "vaya cracks")
+    if re.search(r"(son\s+unos?|eres|sois)\s+(genios?|cracks?|maestros?|capos?)", text):
+        s.sarcasm += 1.5
+        s.complaint += 0.8
+        s.cues["sarcasm"].append("elogio_ironico_directo")
 
     # sarcasmo con elogio y negación o contraste implícito ("qué gusto da ver tanta eficiencia inexistente")
     if re.search(r"(qu[eé]\s+(gusto|placer|maravilla|alegr[ií]a|honor|satisfacci[oó]n).{0,40}(inexistente|lento|sin|nada|ausente))", text):
