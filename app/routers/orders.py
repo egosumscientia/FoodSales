@@ -10,6 +10,44 @@ from typing import Optional
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
+ALLOWED_STATUSES = {
+    "pending",
+    "confirmed",
+    "preparing",
+    "ready",
+    "shipped",
+    "delivered",
+    "cancelled",
+    "escalated",
+}
+
+# Estado -> set de estados permitidos como siguiente paso
+ALLOWED_TRANSITIONS = {
+    "pending": {"confirmed", "cancelled", "escalated"},
+    "confirmed": {"preparing", "cancelled", "escalated"},
+    "preparing": {"ready", "cancelled", "escalated"},
+    "ready": {"shipped", "delivered", "escalated"},
+    "shipped": {"delivered", "escalated"},
+    "delivered": set(),
+    "cancelled": set(),
+    "escalated": set(),
+}
+
+
+def _normalize_status(status: Optional[str]) -> str:
+    return (status or "pending").strip().lower()
+
+
+def _can_transition(current: str, target: str) -> bool:
+    current_n = _normalize_status(current)
+    target_n = _normalize_status(target)
+    if target_n not in ALLOWED_STATUSES:
+        return False
+    # Si no hay regla explícita, se permite cualquier avance (fallback seguro)
+    if current_n not in ALLOWED_TRANSITIONS:
+        return True
+    return target_n in ALLOWED_TRANSITIONS[current_n]
+
 
 @router.post("/")
 def create_order(order_data: dict, db: Session = Depends(get_db)):
@@ -21,12 +59,18 @@ def create_order(order_data: dict, db: Session = Depends(get_db)):
     try:
         user_id = order_data.get("user_id")
         items = order_data.get("items", [])
-        status = order_data.get("status", "pending")
+        status = _normalize_status(order_data.get("status", "pending"))
 
         if not user_id or not items:
             raise HTTPException(
                 status_code=400,
                 detail="Faltan campos obligatorios: user_id o items."
+            )
+
+        if status not in ALLOWED_STATUSES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Estado no permitido. Usa uno de: {', '.join(sorted(ALLOWED_STATUSES))}"
             )
 
         # Calcular total automáticamente
@@ -105,6 +149,46 @@ def get_order_status(
     return {
         "total_orders": len(orders),
         "orders": orders,
+    }
+
+
+@router.put("/{order_id}/status")
+def update_order_status(order_id: int, payload: dict, db: Session = Depends(get_db)):
+    """
+    Actualiza el estado de una orden validando una m·lima m quina de estados.
+    Estados permitidos: pending, confirmed, preparing, ready, shipped, delivered, cancelled, escalated.
+    """
+    new_status = _normalize_status(payload.get("status"))
+    if not new_status:
+        raise HTTPException(status_code=400, detail="Debes enviar el campo 'status'.")
+    if new_status not in ALLOWED_STATUSES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Estado no permitido. Usa uno de: {', '.join(sorted(ALLOWED_STATUSES))}",
+        )
+
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Orden no encontrada.")
+
+    current_status = _normalize_status(order.status)
+    if not _can_transition(current_status, new_status):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Transición inválida: {current_status} -> {new_status}",
+        )
+
+    order.status = new_status
+    db.add(order)
+    db.commit()
+    db.refresh(order)
+
+    return {
+        "message": "Estado actualizado",
+        "order_id": order.id,
+        "order_serial": order.order_serial,
+        "status": order.status,
+        "total": order.total,
     }
 
 

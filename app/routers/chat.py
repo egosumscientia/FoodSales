@@ -296,6 +296,7 @@ async def chat_endpoint(data: ChatMessage):
         if items:
             response_lines = []
             total_general = 0
+            valid_items = 0
             last_action_txt = None
             for item in items:
                 prod_name = item["nombre"]
@@ -304,6 +305,7 @@ async def chat_endpoint(data: ChatMessage):
                 if not prod_row:
                     response_lines.append(f"No encontré '{prod_name}' en el catálogo.")
                     continue
+                valid_items += 1
 
                 from app.core.pricing import calculate_total
                 resultado = calculate_total(prod_row, qty)
@@ -337,7 +339,7 @@ async def chat_endpoint(data: ChatMessage):
                 carrito_text = "🛒 Carrito vacío."
             # --- FIN MOSTRAR CARRITO ACTUALIZADO ---
 
-            if total_general > 0:
+            if total_general > 0 and valid_items > 1:
                 response_lines.append(f"🟩 Total general: ${total_general:,.0f} COP")
 
             action_block = [last_action_txt] if last_action_txt else []

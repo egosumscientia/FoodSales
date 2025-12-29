@@ -5,6 +5,7 @@ from difflib import SequenceMatcher
 
 DATA_DIR = os.path.join('app', 'data')
 SYNONYMS_FILE = os.path.join(DATA_DIR, 'synonyms.json')
+ENRICHED_SYNONYMS: dict[str, list[str]] = {}
 
 
 
@@ -215,6 +216,53 @@ def detect_additional_intents(text: str) -> dict:
     return intents
 
 # --- Extraer múltiples productos y cantidades ---
+def _load_enriched_synonyms() -> dict[str, list[str]]:
+    """
+    Carga synonyms.json una sola vez y genera variaciones singular/plural y compuestas.
+    Esto evita recalcular en cada invocación de extracción.
+    """
+    global ENRICHED_SYNONYMS
+    if ENRICHED_SYNONYMS:
+        return ENRICHED_SYNONYMS
+
+    try:
+        with open(SYNONYMS_FILE, encoding="utf-8") as f:
+            synonyms = json.load(f)
+    except Exception:
+        ENRICHED_SYNONYMS = {}
+        return ENRICHED_SYNONYMS
+
+    import unicodedata
+
+    def strip_accents(s: str) -> str:
+        s = unicodedata.normalize("NFKD", s)
+        return "".join(c for c in s if not unicodedata.combining(c))
+
+    enriched = {}
+    for canonical, variants in synonyms.items():
+        sset = set()
+        for v in variants:
+            base = strip_accents(v.lower().strip())
+            sset.add(base)
+            # Plural simple
+            if not base.endswith("s"):
+                sset.add(base + "s")
+            else:
+                sset.add(base[:-1])
+            # Plural del primer token (filete -> filetes, croqueta -> croquetas)
+            parts = base.split()
+            if parts:
+                first = parts[0]
+                rest = " ".join(parts[1:]) if len(parts) > 1 else ""
+                if not first.endswith("s"):
+                    plural_first = (first + "s" + (" " + rest if rest else "")).strip()
+                    sset.add(plural_first)
+        enriched[canonical] = list(sset)
+
+    ENRICHED_SYNONYMS = enriched
+    return ENRICHED_SYNONYMS
+
+
 def extract_products_and_quantities(message: str) -> list[dict]:
     import json, os, re, unicodedata
     try:
@@ -270,40 +318,11 @@ def extract_products_and_quantities(message: str) -> list[dict]:
     txt = re.sub(r'\s+', ' ', txt).strip(',')
     txt = re.sub(r'(?<=\d)(?=[a-z])', ' ', txt)  # separa 9mm -> 9 mm
 
-    DATA_DIR = os.path.join("app", "data")
-    SYNONYMS_FILE = os.path.join(DATA_DIR, "synonyms.json")
-
-    # --- Cargar sinónimos ---
-    try:
-        with open(SYNONYMS_FILE, encoding="utf-8") as f:
-            synonyms = json.load(f)
-    except Exception:
+    enriched = _load_enriched_synonyms()
+    if not enriched:
         return []
 
-    print("DEBUG TXT:", txt)
-
     found_items = []
-
-    # 🔹 Crear mapa enriquecido con plurales automáticos
-    enriched = {}
-    for canonical, variants in synonyms.items():
-        sset = set()
-        for v in variants:
-            base = strip_accents(v.lower().strip())
-            sset.add(base)
-            if not base.endswith("s"):
-                sset.add(base + "s")
-            else:
-                sset.add(base[:-1])
-            # plural simple del primer token (filete -> filetes, croqueta -> croquetas)
-            parts = base.split()
-            if parts:
-                first = parts[0]
-                rest = " ".join(parts[1:]) if len(parts) > 1 else ""
-                if not first.endswith("s"):
-                    plural_first = (first + "s" + (" " + rest if rest else "")).strip()
-                    sset.add(plural_first)
-        enriched[canonical] = list(sset)
 
     # --- Reparar productos pegados sin espacios ---
     for canonical, variants in enriched.items():
@@ -312,7 +331,7 @@ def extract_products_and_quantities(message: str) -> list[dict]:
             if compact in txt:
                 txt = txt.replace(compact, v)
 
-    # 🔹 Buscar cantidades + sinónimo dentro del texto completo
+    # -  Buscar cantidades + sinónimo dentro del texto completo
     for canonical, variants in enriched.items():
         qty_total = 0
         matched = False
@@ -331,10 +350,20 @@ def extract_products_and_quantities(message: str) -> list[dict]:
             tokens = txt.split()
             for token in tokens:
                 for variant in variants:
-                    if fuzz.ratio(token, variant) >= 80:
+                    ratio_val = fuzz.ratio(token, variant)
+                    # Acepta alto parecido directo
+                    if ratio_val >= 90:
                         qty_total = 1
                         matched = True
                         break
+                    # Para ratios marginales, exige coincidencia de 2+ tokens del sinónimo
+                    if 80 <= ratio_val < 90:
+                        variant_words = variant.split()
+                        overlap = sum(1 for w in variant_words if w in txt)
+                        if overlap >= 2:
+                            qty_total = 1
+                            matched = True
+                            break
                 if matched:
                     break
 
@@ -345,7 +374,7 @@ def extract_products_and_quantities(message: str) -> list[dict]:
                 "cantidad": qty_total
             })
 
-    # 🔹 Ordenar según posición en el texto original (para coherencia en la respuesta)
+    # -  Ordenar según posición en el texto original (para coherencia en la respuesta)
     found_items.sort(
         key=lambda i: min(
             (txt.find(v) for v in enriched.get(i["nombre"], []) if txt.find(v) != -1),
@@ -353,7 +382,7 @@ def extract_products_and_quantities(message: str) -> list[dict]:
         )
     )
 
-    # 🔹 Si hay productos sin número explícito, contar 1 (solo si no se detectó ya con cantidad)
+    # -  Si hay productos sin número explícito, contar 1 (solo si no se detectó ya con cantidad)
     for canonical, variants in enriched.items():
         if any(f["nombre"] == canonical and f["cantidad"] > 0 for f in found_items):
             continue
