@@ -394,7 +394,15 @@ def should_escalate(message:str)->Dict:
     t = normalize(message)
 
     # Profanidad/insultos directos -> escalar siempre
-    if re.search(r"\b(maldito|maldita|mierda|carajo|hp|hpta|hijueputa|gonorrea|perra|conchudo|conchuda|mediocre[s]?)\b", t):
+    if re.search(
+        r"\b("
+        r"maldito|maldita|mierda|carajo|coñ[oó]|cono|hp|hpta|hijueputa|gonorrea|perra|conchudo|conchuda|"
+        r"mediocre[s]?|bazofia[s]?|basura[s]?|inútil|inutil|incompetent[e]?s?|inept[oa]s?|estafador[a]?s?|"
+        r"ladrón|ladron|ladrones|rata[s]?|ratero[s]?|imbécil|imbecil|idiota[s]?|tonto[s]?|torpe[s]?|asqueros[oa]s?|"
+        r"patético|patetico|verg[üu]enza|pésimo|pesimo|nefast[oa]s?|desastre"
+        r")\b",
+        t,
+    ):
         return {
             "agent_response": "Voy a escalar tu caso a un asesor humano para que te ayude con tu solicitud.",
             "should_escalate": True,

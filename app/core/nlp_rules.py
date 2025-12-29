@@ -196,6 +196,7 @@ def detect_additional_intents(text: str) -> dict:
         "pedido incompleto", "demora", "retraso", "no ha llegado", "todavía no llega",
         "repartidor", "cobrado", "cobro incorrecto", "precio distinto",
         "olvidó", "olvido", "esperando", "falta", "dañado", "cambio", "incompleto otra vez"
+        "cancelar pedido", "cancelar", "cobro duplicado", "sobre cobro", "sobreprecio",
     ]
 
     if any(k in text for k in escalate_keywords):
@@ -208,7 +209,7 @@ def detect_additional_intents(text: str) -> dict:
 
     # --- Safe overrides ---
     # Frases informativas que nunca deben escalar
-    safe_keywords = ["invima", "certificado invima", "iva", "descuento", "promoción", "oferta", "certificado"]
+    safe_keywords = ["invima", "certificado invima", "iva", "descuento", "promoción", "oferta", "certificado", "promo", "promocion"]
     if any(sk in text for sk in safe_keywords):
         intents["should_escalate"] = False
         intents["faq"] = True
@@ -305,6 +306,14 @@ def extract_products_and_quantities(message: str) -> list[dict]:
         "diez": "10",
         "once": "11",
         "doce": "12",
+        "trece": "13",
+        "catorce": "14",
+        "quince": "15",
+        "dieciseis": "16", "dieciséis": "16",
+        "diecisiete": "17",
+        "dieciocho": "18",
+        "diecinueve": "19",
+        "veinte": "20",
     }
     for word, digit in number_words.items():
         txt = re.sub(rf"\b{word}\b", digit, txt)
