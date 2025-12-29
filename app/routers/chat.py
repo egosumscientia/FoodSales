@@ -75,6 +75,25 @@ def generate_courtesy_response(message: str) -> str:
     return "Estoy aqui si necesitas mas informacion."
 # --- FIN BLOQUE NUEVO ---
 
+def _format_last_action(cart_summary: dict | None) -> str | None:
+    if not cart_summary:
+        return None
+    last = cart_summary.get("last_action") or {}
+    action = last.get("action")
+    if not action:
+        return None
+    name = last.get("name") or last.get("sku") or ""
+    qty = last.get("qty")
+    if action == "add":
+        return f"Ultima accion: agregue {qty} x {name}."
+    if action == "remove":
+        return f"Ultima accion: quite {qty} x {name}."
+    if action == "clear":
+        return "Ultima accion: carrito vaciado."
+    if action == "remove_missing":
+        return f"Ultima accion: no encontre {name} para quitar."
+    return None
+
 @router.post("/")
 async def chat_endpoint(data: ChatMessage):
     try:
@@ -90,6 +109,7 @@ async def chat_endpoint(data: ChatMessage):
         # --- COMANDOS DE CARRITO ---
         if "ver carrito" in user_input:
             cart = cart_service.show(data.session_id)
+            last_action_txt = _format_last_action(cart)
             if not cart["items"]:
                 return {"agent_response": "Tu carrito esta vacio.", "should_escalate": False}
             items_txt = [f"- {i['name']} x{i['qty']} = ${i['line_total']:,.0f} COP" for i in cart["items"]]
@@ -145,8 +165,11 @@ async def chat_endpoint(data: ChatMessage):
             else:
                 carrito_txt = "🛒 Carrito vacío."
 
+            last_action_txt = _format_last_action(cart)
+            action_block = f"{last_action_txt}\n\n" if last_action_txt else ""
+
             return {
-                "agent_response": f"Producto(s) eliminado(s): {', '.join(removed_items)}\n\n🛒 Carrito actualizado:\n{carrito_txt}",
+                "agent_response": f"{action_block}Producto(s) eliminado(s): {', '.join(removed_items)}\n\n🛒 Carrito actualizado:\n{carrito_txt}",
                 "should_escalate": False,
             }
 
@@ -273,6 +296,7 @@ async def chat_endpoint(data: ChatMessage):
         if items:
             response_lines = []
             total_general = 0
+            last_action_txt = None
             for item in items:
                 prod_name = item["nombre"]
                 qty = item["cantidad"]
@@ -316,8 +340,10 @@ async def chat_endpoint(data: ChatMessage):
             if total_general > 0:
                 response_lines.append(f"🟩 Total general: ${total_general:,.0f} COP")
 
+            action_block = [last_action_txt] if last_action_txt else []
+
             return {
-                "agent_response": "\n".join(response_lines + ["", "🛒 Carrito actualizado:", carrito_text]),
+                "agent_response": "\n".join(response_lines + action_block + ["", "🛒 Carrito actualizado:", carrito_text]),
                 "should_escalate": False,
                 "summary": {
                     "pedido_o_consulta": user_input,

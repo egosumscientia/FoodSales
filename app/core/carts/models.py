@@ -46,6 +46,7 @@ class Cart:
     created_at: float = field(default_factory=_now)
     updated_at: float = field(default_factory=_now)
     version: int = 1
+    last_action: Optional[dict] = field(default_factory=dict)
 
     def subtotal(self) -> float:
         return sum(i.line_total() for i in self.items.values())
@@ -62,4 +63,5 @@ class Cart:
             "subtotal": self.subtotal(),
             "total": self.total(),
             "updated_at": self.updated_at,
+            "last_action": self.last_action or {},
         }

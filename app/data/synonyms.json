@@ -69,7 +69,9 @@
     "mantequilla sin sal",
     "mantequillas sin sal",
     "mantequilla natural",
-    "mantequillas naturales"
+    "mantequillas naturales",
+    "mantequilla",
+    "mantequillas"
   ],
   "Kumis": [
     "kumis",
@@ -82,11 +84,7 @@
     "jugo de naranja",
     "jugos de naranja",
     "zumo de naranja",
-    "zumos de naranja",
-    "jugo natural",
-    "jugos naturales",
-    "jugos de fruta",
-    "jugo de fruta"
+    "zumos de naranja"
   ],
   "Agua mineral": [
     "agua mineral",
@@ -102,7 +100,11 @@
     "gaseosa cola",
     "gaseosas cola",
     "refresco de cola",
-    "refrescos de cola"
+    "refrescos de cola",
+    "gaseosa",
+    "gaseosas",
+    "refresco",
+    "refrescos"
   ],
   "Té verde": [
     "té verde",
@@ -149,12 +151,13 @@
     "tostadas de maíz",
     "tostada de maíz",
     "nachos",
-    "nacho",
-    "totopos"
+    "nacho"
   ],
   "Pechuga de pollo": [
     "pechuga de pollo",
-    "pechugas de pollo"
+    "pechugas de pollo",
+    "pechuga",
+    "pechugas"
   ],
   "Carne molida": [
     "carne molida",
@@ -162,7 +165,9 @@
   ],
   "Chuleta de cerdo": [
     "chuleta de cerdo",
-    "chuletas de cerdo"
+    "chuletas de cerdo",
+    "chuleta",
+    "chuletas"
   ],
   "Costilla de res": [
     "costilla de res",

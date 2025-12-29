@@ -33,6 +33,13 @@ class CartService:
             existing.discount = item.discount
         else:
             cart.items[item.sku] = item
+        cart.last_action = {
+            "action": "add",
+            "sku": item.sku,
+            "name": item.name,
+            "qty": item.qty,
+            "timestamp": time(),
+        }
         self.store.save(cart)
         log.info(f"Item {item.sku} agregado al carrito {session_id}")
         return cart.to_summary()
@@ -53,19 +60,43 @@ class CartService:
         cart = self.store.get_or_create(session_id)
         item = cart.items.get(sku)
         if not item:
+            cart.last_action = {
+                "action": "remove_missing",
+                "sku": sku,
+                "qty": 0,
+                "timestamp": time(),
+            }
+            self.store.save(cart)
             return cart.to_summary()
         if qty is None or qty >= item.qty:
+            removed_qty = item.qty
             cart.items.pop(sku, None)
         else:
-            item.qty -= qty
+            removed_qty = qty
+            item.qty -= removed_qty
             item.updated_at = time()
+        cart.last_action = {
+            "action": "remove",
+            "sku": sku,
+            "name": item.name,
+            "qty": removed_qty,
+            "timestamp": time(),
+        }
         self.store.save(cart)
         return cart.to_summary()
 
     def clear(self, session_id: str):
         session_id = self._session(session_id)
         self.store.clear(session_id)
-        return self.store.get_or_create(session_id).to_summary()
+        # Re-crear carrito limpio y registrar acci¢n
+        cart = self.store.get_or_create(session_id)
+        cart.last_action = {
+            "action": "clear",
+            "qty": 0,
+            "timestamp": time(),
+        }
+        self.store.save(cart)
+        return cart.to_summary()
 
     def show(self, session_id: str):
         session_id = self._session(session_id)

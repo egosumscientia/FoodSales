@@ -30,6 +30,7 @@ class RedisCartStore:
                 created_at=data.get("created_at", time()),
                 updated_at=data.get("updated_at", time()),
                 version=data.get("version", 1),
+                last_action=data.get("last_action", {}),
             )
         cart = Cart(session_id=session_id, items={}, currency=currency)
         self.save(cart)
