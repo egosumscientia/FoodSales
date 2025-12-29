@@ -3,72 +3,140 @@
 <head>
   <meta charset="UTF-8" />
   <title>FoodSales</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: radial-gradient(circle at 20% 20%, #eef3ff, #f7f9fc 55%);
+      --panel: rgba(255, 255, 255, 0.9);
+      --border: #e4e8f0;
+      --shadow: 0 12px 35px rgba(37, 44, 97, 0.15);
+      --text: #1f2a44;
+      --muted: #56607a;
+      --accent: #2563eb;
+      --accent-2: #00b894;
+      --danger: #e05252;
+      --warning: #0ea5e9;
+      --bubble-user: #e8f1ff;
+      --bubble-bot: #f5f7fb;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
     body {
-      font-family: "Segoe UI", sans-serif;
-      background: #f5f7fa;
+      font-family: "Manrope", "Segoe UI", sans-serif;
+      background: var(--bg);
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 2rem;
+      padding: 2rem 1.5rem 3rem;
+      color: var(--text);
     }
     h1 {
-      color: #333;
-      margin-bottom: 1rem;
+      color: var(--text);
+      margin-bottom: 1.25rem;
+      letter-spacing: -0.5px;
+      font-weight: 700;
     }
     #chat {
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      width: 600px;
-      height: 400px;
-      padding: 1rem;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      width: min(720px, 100%);
+      height: 460px;
+      padding: 1.2rem;
       overflow-y: auto;
     }
     .msg {
-      margin: 0.5rem 0;
-      line-height: 1.4;
+      margin: 0.65rem 0;
+      line-height: 1.5;
+      display: flex;
+      gap: 0.55rem;
+      align-items: flex-start;
     }
-    .user { color: #0078d7; }
-    .bot { color: #222; }
-
+    .bubble {
+      padding: 0.65rem 0.9rem;
+      border-radius: var(--radius);
+      max-width: 90%;
+      box-shadow: 0 6px 18px rgba(31, 42, 68, 0.05);
+      border: 1px solid var(--border);
+      background: var(--bubble-bot);
+    }
+    .user {
+      justify-content: flex-end;
+    }
+    .user .bubble {
+      background: var(--bubble-user);
+      border-color: #d6e5ff;
+    }
+    .role {
+      font-weight: 700;
+      display: block;
+      margin-bottom: 0.15rem;
+    }
     #input-area {
       display: flex;
-      width: 600px;
+      width: min(720px, 100%);
       margin-top: 1rem;
-      gap: 0.5rem;
+      gap: 0.75rem;
+      align-items: center;
     }
     input {
       flex: 1;
-      padding: 0.8rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+      padding: 0.9rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
       outline: none;
+      font-size: 0.95rem;
+      background: white;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
     }
     button {
-      background: #0078d7;
+      background: var(--accent);
       color: white;
       border: none;
-      padding: 0.8rem 1.2rem;
-      border-radius: 8px;
+      padding: 0.85rem 1.1rem;
+      border-radius: 12px;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s;
+      font-weight: 600;
+      box-shadow: 0 8px 18px rgba(37,99,235,0.25);
     }
-    button:hover { background: #005fa3; }
-
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    .secondary { background: #6b7280; box-shadow: none; }
+    .secondary:hover { background: #5a6070; }
+    .danger { background: var(--danger); box-shadow: none; }
+    .danger:hover { background: #cc4444; }
+    .confirm { background: var(--accent-2); box-shadow: none; }
+    .confirm:hover { background: #00a682; }
+    .warning { background: var(--warning); box-shadow: none; }
     #quick-actions {
-      margin-top: 0.7rem;
-      display: flex;
-      width: 600px;
-      justify-content: flex-end;
-      gap: 0.5rem;
+      margin-top: 0.85rem;
+      width: min(720px, 100%);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.55rem;
+      align-items: stretch;
     }
-    .secondary { background: #888; }
-    .secondary:hover { background: #666; }
-    .danger { background: #d9534f; }
-    .danger:hover { background: #c9302c; }
-    .confirm { background: #28a745; }
-    .confirm:hover { background: #218838; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.75rem 0.95rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      width: 100%;
+    }
+    .icon {
+      font-size: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -82,12 +150,12 @@
   </div>
 
   <div id="quick-actions">
-    <button class="secondary" onclick="sendQuick('ver carrito')">Ver carrito</button>
-    <button class="danger" onclick="sendQuick('vacía carrito')">Vaciar carrito</button>
-    <button class="confirm" onclick="confirmOrder()">Confirmar pedido</button>
-    <button class="secondary" onclick="viewOrders()">Ver órdenes</button>
-    <button class="danger" onclick="escalateOrder()">Escalar orden</button>
-    <button class="warning" onclick="clearChat()">Limpiar chat</button>
+    <button class="secondary pill" onclick="sendQuick('ver carrito')"><span class="icon">🛒</span>Ver carrito</button>
+    <button class="danger pill" onclick="sendQuick('vacía carrito')"><span class="icon">🧹</span>Vaciar carrito</button>
+    <button class="confirm pill" onclick="confirmOrder()"><span class="icon">✅</span>Confirmar pedido</button>
+    <button class="secondary pill" onclick="viewOrders()"><span class="icon">📑</span>Ver órdenes</button>
+    <button class="danger pill" onclick="escalateOrder()"><span class="icon">⚠️</span>Escalar orden</button>
+    <button class="warning pill" onclick="clearChat()"><span class="icon">🗑️</span>Limpiar chat</button>
   </div>
 
   <script>
@@ -180,10 +248,13 @@
     }
 
     function addMessage(role, text) {
-      const p = document.createElement("p");
-      p.classList.add("msg", role);
-      p.innerHTML = `<b>${role === "user" ? "Tu" : "Agente"}:</b> ${text}`;
-      chat.appendChild(p);
+      const row = document.createElement("div");
+      row.classList.add("msg", role);
+      const bubble = document.createElement("div");
+      bubble.classList.add("bubble");
+      bubble.innerHTML = `<span class="role">${role === "user" ? "Tú" : "Agente"}:</span>${text}`;
+      row.appendChild(bubble);
+      chat.appendChild(row);
       chat.scrollTop = chat.scrollHeight;
     }
 
